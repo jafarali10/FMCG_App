@@ -188,5 +188,193 @@ module.exports = function (model) {
         }
     }
 
+    module.productCreate = async function (request, response) {
+        try {
+            let { name, price, category } = request.body
+            let product = await model.Product.findOne({ name: name, category: category ,isDelete: false});
+            if (product) {
+                return response.send({
+                    status: "fail",
+                    result: null,
+                    message: "Already exist this product.",
+                    statusCode: 401,
+                });
+            };
+            let createProduct = await model.Product.create({
+                name: name,
+                price: price,
+                category: category
+            });
+            if (createProduct) {
+                return response.send({
+                    status: "success",
+                    result: null,
+                    message: "Successfully Created Product.",
+                    statusCode: 200,
+                });
+            } else {
+                return response.send({
+                    status: "fail",
+                    result: null,
+                    message: "Product not created, please try after sometime.",
+                    statusCode: 401,
+                });
+            }
+        } catch (error) {
+            console.log("error", error);
+            return response.send({
+                status: "fail",
+                result: null,
+                message: "Something went wrong",
+                statusCode: 401,
+            });
+        }
+    }
+
+    module.productList = async function (request, response) {
+        try {
+
+            console.log("----->", request.body);
+
+            let { pageNumber, length, search } = request.body
+
+            let query = {
+                isDelete: false,
+            }
+
+            if (search) {
+                query["$or"] = [
+                    { name: { $regex: ".*" + search + ".*", $options: "i" } },
+                    { category: { $regex: ".*" + search + ".*", $options: "i" } },
+                    { price: { $regex: ".*" + search + ".*", $options: "i" } },
+                ]
+            }
+
+            let start = pageNumber * length
+            start = start - length
+
+            let productlist = await model.Product.find(query).skip(Number(start))
+                .limit(Number(length))
+                .sort({ createdAt: -1 })
+                .lean();
+
+            return response.send({
+                status: "success",
+                result: productlist,
+                message: "Product List",
+                statusCode: 200,
+            });
+
+        } catch (error) {
+            console.log("error", error);
+            return response.send({
+                status: "fail",
+                result: null,
+                message: "Something went wrong",
+                statusCode: 401,
+            });
+        }
+    }
+
+    module.productDelete = async function (request, response) {
+        try {
+            let product = await model.Product.findOne({ _id: request.query.id });
+            if (!product) {
+                return response.send({
+                    status: "fail",
+                    result: null,
+                    message: "Product not found.",
+                    statusCode: 401,
+                });
+            };
+
+            let updateProduct = await model.Product.updateOne({ _id: request.query.id }, { isDelete: true });
+            if (updateProduct) {
+                return response.send({
+                    status: "success",
+                    result: null,
+                    message: "Successfully Product Delete.",
+                    statusCode: 200,
+                });
+            } else {
+                return response.send({
+                    status: "fail",
+                    result: null,
+                    message: "Product not update, please try after sometime.",
+                    statusCode: 401,
+                });
+            }
+
+        } catch (error) {
+            console.log("error", error);
+            return response.send({
+                status: "fail",
+                result: null,
+                message: "Something went wrong",
+                statusCode: 401,
+            });
+        }
+    }
+
+    module.productUpdate = async function (request, response) {
+        try {
+            let { id, name, price, category, status } = request.body
+            let product = await model.Product.findOne({ _id: id, isDelete: false });
+            if (!product) {
+                return response.send({
+                    status: "fail",
+                    result: null,
+                    message: "Product not found.",
+                    statusCode: 401,
+                });
+            };
+            let checkProduct = await model.Product.findOne({
+                _id: { $ne: product._id },
+                name: name,
+                category: category,
+                isDelete: false
+            });
+
+            if (checkProduct) {
+                return response.send({
+                    status: "fail",
+                    result: null,
+                    message: "Already exist this product.",
+                    statusCode: 401,
+                });
+            };
+
+            let updateProduct = await model.Product.updateOne({ _id: id }, {
+                name: name,
+                price: price,
+                category: category,
+                status: status
+            });
+            if (updateProduct) {
+                return response.send({
+                    status: "success",
+                    result: null,
+                    message: "Successfully Update Product Details.",
+                    statusCode: 200,
+                });
+            } else {
+                return response.send({
+                    status: "fail",
+                    result: null,
+                    message: "Product not update, please try after sometime.",
+                    statusCode: 401,
+                });
+            }
+        } catch (error) {
+            console.log("error", error);
+            return response.send({
+                status: "fail",
+                result: null,
+                message: "Something went wrong",
+                statusCode: 401,
+            });
+        }
+    }
+
     return module;
 }
