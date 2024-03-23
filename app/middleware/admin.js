@@ -1,11 +1,13 @@
+var jwt = require('jsonwebtoken');
 module.exports = function (model) {
     var module = {};
 
     module.isLogin = async function (req, res, next) {
         let { authorization } = req.headers
-        console.log("req.headers",req.headers);
+        console.log("req.headers",authorization);
         if (authorization) {
-            let token = authorization.split(" ")[1]
+            let token = authorization.split(" ")[1];
+            console.log("token -->", token);
             let adminData = await model.User.findOne({
                 jwtLoginToken: token,
                 role:"admin"
@@ -18,7 +20,7 @@ module.exports = function (model) {
                 return res.send({
                     status: "fail",
                     result: null,
-                    message: "Invalid Token",
+                    message: "Admin not found.",
                     statusCode: 401,
                 });
             }

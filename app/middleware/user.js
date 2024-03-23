@@ -1,3 +1,4 @@
+var jwt = require('jsonwebtoken');
 module.exports = function (model) {
     var module = {};
 

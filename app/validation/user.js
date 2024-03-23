@@ -1,3 +1,4 @@
+let Joi = require('joi')
 module.exports = function (model) {
     var module = {};
 

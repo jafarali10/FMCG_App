@@ -1,3 +1,5 @@
+let bcrypt = require("bcrypt")
+var jwt = require('jsonwebtoken');
 module.exports = function (model) {
     var module = {};
 
@@ -11,8 +13,8 @@ module.exports = function (model) {
             })
 
             if (!adminData) {
-                let adminCount = await model.User.find({ role: "admin" })
-                if (!adminCount.length) {
+                let adminCount = await model.User.findOne({ role: "admin" })
+                if (!adminCount) {
                     await model.User.create({
                         email: "admin@gmail.com",
                         password: bcrypt.hashSync('123456', bcrypt.genSaltSync(8), null),
@@ -38,9 +40,7 @@ module.exports = function (model) {
             var token = jwt.sign({ data: adminData._id }, config.jwt_secret, { expiresIn: config.jwt_expire });
 
             adminData.jwtLoginToken = token
-            await model.User.updateOne({ _id: adminData._id }, {
-                jwtLoginToken: token
-            })
+            await model.User.updateOne({ _id: adminData._id }, { jwtLoginToken: token })
 
             return response.send({
                 status: "success",
